@@ -1,6 +1,7 @@
 package com.Gamified.Task.Management.Web.App.config;
 
 
+import com.Gamified.Task.Management.Web.App.filter.JwtAuthenticationFilter;
 import com.Gamified.Task.Management.Web.App.utility.JwtService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
