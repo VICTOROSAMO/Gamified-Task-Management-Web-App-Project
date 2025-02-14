@@ -1,15 +1,13 @@
 package com.Gamified.Task.Management.Web.App.entity;
 import jakarta.persistence.*;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 @Entity
-@Data
-@NoArgsConstructor
+@Table(name = "users")
+@Getter @Setter
+@NoArgsConstructor @AllArgsConstructor
 
 public class User {
-
-
         @Id
         @GeneratedValue(strategy = GenerationType.IDENTITY)
         private Long id;
@@ -20,9 +18,7 @@ public class User {
         @Column(nullable = false)
         private String password;
 
-        @Column(unique = true, nullable = false)
-        private String email;
-
-        private String role = "USER"; // Default role
+        @Column(nullable = false)
+        private int points = 0;
     }
 
