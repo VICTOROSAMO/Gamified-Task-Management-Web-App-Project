@@ -1,49 +1,35 @@
-import { createContext, useState, useContext, ReactNode } from "react";
-import { loginUser, registerUser, UserData } from "../services/api";
+import { createContext, useContext, useState, ReactNode } from "react";
+import { auth } from "../services/firebase";
+import { User, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from "firebase/auth";
 
 interface AuthContextType {
-  user: string | null;
-  token: string | null;
-  login: (username: string, password: string) => Promise<void>;
-  signup: (username: string, password: string) => Promise<void>;
-  logout: () => void;
+  user: User | null;
+  signup: (email: string, password: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<void>;
+  logout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<string | null>(null);
-  const [token, setToken] = useState<string | null>(localStorage.getItem("token") || null);
+  const [user, setUser] = useState<User | null>(null);
 
-  const login = async (username: string, password: string) => {
-    try {
-      const response = await loginUser({ username, password });
-      setToken(response.data.token);
-      localStorage.setItem("token", response.data.token);
-      setUser(username);
-    } catch (error) {
-      console.error("Login failed:", error);
-      throw error;
-    }
+  const signup = async (email: string, password: string) => {
+    await createUserWithEmailAndPassword(auth, email, password);
   };
 
-  const signup = async (username: string, password: string) => {
-    try {
-      await registerUser({ username, password });
-      alert("Signup successful! Please login.");
-    } catch (error) {
-      alert("Signup failed.");
-    }
+  const login = async (email: string, password: string) => {
+    const userCredential = await signInWithEmailAndPassword(auth, email, password);
+    setUser(userCredential.user);
   };
 
-  const logout = () => {
-    setToken(null);
+  const logout = async () => {
+    await signOut(auth);
     setUser(null);
-    localStorage.removeItem("token");
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, login, signup, logout }}>
+    <AuthContext.Provider value={{ user, signup, login, logout }}>
       {children}
     </AuthContext.Provider>
   );

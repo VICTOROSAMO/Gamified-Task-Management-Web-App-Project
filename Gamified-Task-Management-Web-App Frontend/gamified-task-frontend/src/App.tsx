@@ -1,23 +1,26 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
-import Login from "./components/Auth/login";
+import { TaskProvider } from "./context/TaskContext";
 import Signup from "./components/Auth/signup";
+import Login from "./components/Auth/login";
 import Dashboard from "./pages/Dashboard";
 
-const App = () => {
+function App() {
   return (
     <Router>
       <AuthProvider>
-        <Routes>
-          <Route path="/login" element={<Login />} />
-          <Route path="/signup" element={<Signup />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/" element={<h1>Home Page</h1>} />
-        </Routes>
+        <TaskProvider>
+          <Routes>
+            <Route path="/signup" element={<Signup />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/" element={<Signup />} />
+          </Routes>
+        </TaskProvider>
       </AuthProvider>
     </Router>
   );
-};
+}
 
 export default App;
 

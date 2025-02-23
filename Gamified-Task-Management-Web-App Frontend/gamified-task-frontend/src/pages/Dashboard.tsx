@@ -1,12 +1,26 @@
-import React from "react";
+import { useTask } from "../context/TaskContext";
 
-const Dashboard: React.FC = () => {
+const Dashboard = () => {
+  const { tasks } = useTask();
+
   return (
-    <div>
-      <h1>Dashboard</h1>
-      <p>Welcome to the Task Management System!</p>
+    <div className="p-6">
+      <h1 className="text-2xl font-bold mb-4">Dashboard</h1>
+      
+      {/* Show tasks */}
+      <ul>
+        {tasks.length > 0 ? (
+          tasks.map((task) => (
+            <li key={task.id} className="p-2 bg-gray-200 my-2 rounded">
+              <strong>{task.title}</strong> - {task.description}
+            </li>
+          ))
+        ) : (
+          <p>No tasks found.</p>
+        )}
+      </ul>
     </div>
   );
 };
 
-export default Dashboard; 
+export default Dashboard;
