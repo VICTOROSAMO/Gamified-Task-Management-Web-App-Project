@@ -1,12 +1,14 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { tasksCollection } from "../services/firebase";
-import {onSnapshot, query, where, addDoc } from "firebase/firestore";
+import { addDoc, updateDoc, deleteDoc, doc, onSnapshot, query, where } from "firebase/firestore";
 import { Task } from "../types/Task";
 import { useAuth } from "./AuthContext";
 
 interface TaskContextType {
   tasks: Task[];
   createTask: (title: string, description: string) => Promise<void>;
+  updateTaskStatus: (taskId: string, status: string) => Promise<void>;
+  deleteTask: (taskId: string) => Promise<void>;
 }
 
 const TaskContext = createContext<TaskContextType | undefined>(undefined);
@@ -15,36 +17,42 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
   const [tasks, setTasks] = useState<Task[]>([]);
   const { user } = useAuth();
 
-  // 🔹 Fetch tasks from Firestore when the user logs in
+  // Fetch tasks from Firestore
   useEffect(() => {
     if (!user) return;
 
     const q = query(tasksCollection, where("userId", "==", user.uid));
-    
-    // Real-time listener for Firestore
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const taskList = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })) as Task[];
       setTasks(taskList);
     });
 
-    return () => unsubscribe(); // Cleanup listener
+    return () => unsubscribe();
   }, [user]);
 
   const createTask = async (title: string, description: string) => {
     if (!user) return;
-    const newTask: Task = {
+    await addDoc(tasksCollection, {
       title,
       description,
       status: "pending",
       createdAt: Date.now(),
       userId: user.uid,
-    };
+    });
+  };
 
-    await addDoc(tasksCollection, newTask);
+  const updateTaskStatus = async (taskId: string, status: string) => {
+    const taskRef = doc(tasksCollection, taskId);
+    await updateDoc(taskRef, { status });
+  };
+
+  const deleteTask = async (taskId: string) => {
+    const taskRef = doc(tasksCollection, taskId);
+    await deleteDoc(taskRef);
   };
 
   return (
-    <TaskContext.Provider value={{ tasks, createTask }}>
+    <TaskContext.Provider value={{ tasks, createTask, updateTaskStatus, deleteTask }}>
       {children}
     </TaskContext.Provider>
   );
@@ -55,3 +63,4 @@ export const useTask = () => {
   if (!context) throw new Error("useTask must be used within a TaskProvider");
   return context;
 };
+
