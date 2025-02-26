@@ -57,21 +57,24 @@ const Dashboard = () => {
   // Identify Upcoming & Overdue Tasks
   useEffect(() => {
     const now = new Date();
+
+const upcoming = tasks.filter((task) => {
+  if (!task.dueDate) return false; // 🔹 Ensure dueDate exists
+
+  let dueDate: Date;
+  if (task.dueDate instanceof Timestamp) {
+    dueDate = task.dueDate.toDate();
+  } else if (typeof task.dueDate === "number") {
+    dueDate = new Date(task.dueDate);
+  } else {
+    return false;
+  }
+
+  return dueDate > now && dueDate <= new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000); // Due in 3 days
+});
+
   
-    const upcoming = tasks.filter((task) => {
-      if (!task.dueDate) return false;
-  
-      let dueDate;
-      if (task.dueDate instanceof Timestamp) {
-        dueDate = task.dueDate.toDate();
-      } else if (typeof task.dueDate === "number") {
-        dueDate = new Date(task.dueDate);
-      } else {
-        return false;
-      }
-  
-      return dueDate > now && dueDate <= new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000); // Due in 3 days
-    });
+   
   
     const overdue = tasks.filter((task) => {
       if (!task.dueDate) return false;
@@ -138,22 +141,7 @@ const Dashboard = () => {
             {upcomingTasks.length > 0 && (
               <div className="upcoming-tasks">
                 <h3>Upcoming Tasks 📅</h3>
-                <ul>
-                  {upcomingTasks.map((task) => (
-                    <li key={task.id}>{task.title} - Due {new Date(task.dueDate).toDateString()}</li>
-                  ))}
-                </ul>
-              </div>
-            )}
-            
-            {overdueTasks.length > 0 && (
-              <div className="overdue-tasks">
-                <h3>Overdue Tasks ⚠️</h3>
-                <ul>
-                  {overdueTasks.map((task) => (
-                    <li key={task.id}>{task.title} - Due {new Date(task.dueDate).toDateString()}</li>
-                  ))}
-                </ul>
+               
               </div>
             )}
           </div>
@@ -164,6 +152,39 @@ const Dashboard = () => {
             <p>Completed Tasks: {weeklyReport.completed}</p>
             <p>Pending Tasks: {weeklyReport.pending}</p>
           </div>
+          <ul>
+  {upcomingTasks.map((task) => {
+    const dueDate =
+      task.dueDate instanceof Timestamp
+        ? task.dueDate.toDate()
+        : typeof task.dueDate === "number"
+        ? new Date(task.dueDate)
+        : null; // 🔹 Handle undefined dueDate
+
+    return (
+      <li key={task.id}>
+        {task.title} - Due {dueDate ? dueDate.toDateString() : "No Due Date"} {/* 🔹 Display fallback text */}
+      </li>
+    );
+  })}
+</ul>
+
+<ul>
+  {overdueTasks.map((task) => {
+    const dueDate =
+      task.dueDate instanceof Timestamp
+        ? task.dueDate.toDate()
+        : typeof task.dueDate === "number"
+        ? new Date(task.dueDate)
+        : null; // 🔹 Handle undefined dueDate
+
+    return (
+      <li key={task.id}>
+        {task.title} - Due {dueDate ? dueDate.toDateString() : "No Due Date"} {/* 🔹 Display fallback text */}
+      </li>
+    );
+  })}
+</ul>
 
           {/* Filters & Sorting */}
           <div className="filters">
