@@ -5,15 +5,18 @@ const TaskForm = () => {
   const { createTask } = useTask();
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+  const [dueDate, setDueDate] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title.trim()) return;
-
-    await createTask(title, description);
+    if (!title.trim() || !dueDate) return;
+  
+    await createTask(title, description, new Date(dueDate)); // 🔹 Pass `dueDate` to createTask
     setTitle("");
     setDescription("");
+    setDueDate("");
   };
+  
 
   return (
     <form onSubmit={handleSubmit} className="task-form">
@@ -28,6 +31,12 @@ const TaskForm = () => {
         placeholder="Task Description"
         value={description}
         onChange={(e) => setDescription(e.target.value)}
+        required
+      />
+      <input
+        type="date"
+        value={dueDate}
+        onChange={(e) => setDueDate(e.target.value)}
         required
       />
       <button type="submit">Add Task</button>

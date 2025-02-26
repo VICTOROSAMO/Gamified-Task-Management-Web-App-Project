@@ -6,10 +6,11 @@ import { useAuth } from "./AuthContext";
 
 interface TaskContextType {
   tasks: Task[];
-  createTask: (title: string, description: string) => Promise<void>;
+  createTask: (title: string, description: string, dueDate: Date) => Promise<void>; // 🔹 Updated function signature
   updateTaskStatus: (taskId: string, status: string) => Promise<void>;
   deleteTask: (taskId: string) => Promise<void>;
 }
+
 
 const TaskContext = createContext<TaskContextType | undefined>(undefined);
 
@@ -30,16 +31,19 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
     return () => unsubscribe();
   }, [user]);
 
-  const createTask = async (title: string, description: string) => {
+  const createTask = async (title: string, description: string, dueDate: Date) => {
     if (!user) return;
+  
     await addDoc(tasksCollection, {
       title,
       description,
       status: "pending",
-      createdAt: Date.now(),
+      createdAt: Date.now(), // Save timestamp
+      dueDate: dueDate.getTime(), // Convert date to timestamp
       userId: user.uid,
     });
   };
+  
 
   const updateTaskStatus = async (taskId: string, status: string) => {
     const taskRef = doc(tasksCollection, taskId);
