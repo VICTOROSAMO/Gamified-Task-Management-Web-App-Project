@@ -20,6 +20,7 @@ const TaskForm = () => {
 
   return (
     <form onSubmit={handleSubmit} className="task-form">
+      Add Task
       <input
         type="text"
         placeholder="Task Title"
@@ -27,12 +28,14 @@ const TaskForm = () => {
         onChange={(e) => setTitle(e.target.value)}
         required
       />
+      Describe the task
       <textarea
         placeholder="Task Description"
         value={description}
         onChange={(e) => setDescription(e.target.value)}
         required
       />
+      Deadline for the task
       <input
         type="date"
         value={dueDate}

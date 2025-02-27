@@ -15,15 +15,16 @@ const Dashboard = () => {
   const [sortBy, setSortBy] = useState("newest");
   const [points, setPoints] = useState(0);
   const [streak, setStreak] = useState(0);
-  const [upcomingTasks, setUpcomingTasks] = useState<Task[]>([]); // 🔹 Explicitly define Task[]
-  const [overdueTasks, setOverdueTasks] = useState<Task[]>([]); // 🔹 Explicitly define Task[]
-
+  const [upcomingTasks, setUpcomingTasks] = useState<Task[]>([]);
+  const [overdueTasks, setOverdueTasks] = useState<Task[]>([]);
   const [weeklyReport, setWeeklyReport] = useState({ completed: 0, pending: 0 });
+
+  // 🔹 Filter only pending tasks
+  const pendingTasks = tasks.filter((task) => task.status === "pending");
 
   // Calculate Task Statistics
   const totalTasks = tasks.length;
   const completedTasks = tasks.filter((task) => task.status === "completed").length;
-  const pendingTasks = tasks.filter((task) => task.status === "pending").length;
 
   // Calculate Points (Each completed task = 10 points)
   useEffect(() => {
@@ -48,37 +49,28 @@ const Dashboard = () => {
     setStreak(completedToday ? streak + 1 : 0);
   }, [tasks]);
 
-  // Filter & Sort Tasks
-  const filteredTasks = tasks.filter((task) => (filter === "all" ? true : task.status === filter));
-  const sortedTasks = [...filteredTasks].sort((a, b) =>
-    sortBy === "newest" ? Number(b.createdAt) - Number(a.createdAt) : Number(a.createdAt) - Number(b.createdAt)
-  );
-
   // Identify Upcoming & Overdue Tasks
   useEffect(() => {
     const now = new Date();
 
-const upcoming = tasks.filter((task) => {
-  if (!task.dueDate) return false; // 🔹 Ensure dueDate exists
+    const upcoming = tasks.filter((task) => {
+      if (!task.dueDate) return false;
 
-  let dueDate: Date;
-  if (task.dueDate instanceof Timestamp) {
-    dueDate = task.dueDate.toDate();
-  } else if (typeof task.dueDate === "number") {
-    dueDate = new Date(task.dueDate);
-  } else {
-    return false;
-  }
+      let dueDate: Date;
+      if (task.dueDate instanceof Timestamp) {
+        dueDate = task.dueDate.toDate();
+      } else if (typeof task.dueDate === "number") {
+        dueDate = new Date(task.dueDate);
+      } else {
+        return false;
+      }
 
-  return dueDate > now && dueDate <= new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000); // Due in 3 days
-});
+      return dueDate > now && dueDate <= new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000); // Due in 3 days
+    });
 
-  
-   
-  
     const overdue = tasks.filter((task) => {
       if (!task.dueDate) return false;
-  
+
       let dueDate;
       if (task.dueDate instanceof Timestamp) {
         dueDate = task.dueDate.toDate();
@@ -87,22 +79,21 @@ const upcoming = tasks.filter((task) => {
       } else {
         return false;
       }
-  
+
       return dueDate < now && task.status !== "completed";
     });
-  
+
     setUpcomingTasks(upcoming);
     setOverdueTasks(overdue);
   }, [tasks]);
-  
 
   // Generate Weekly Progress Report
   useEffect(() => {
-    const pastWeek = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000); // 7 days ago
-  
+    const pastWeek = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+
     const completedThisWeek = tasks.filter((task) => {
       let taskDate;
-  
+
       if (task.createdAt instanceof Timestamp) {
         taskDate = task.createdAt.toDate();
       } else if (typeof task.createdAt === "number") {
@@ -110,19 +101,16 @@ const upcoming = tasks.filter((task) => {
       } else {
         return false;
       }
-  
+
       return task.status === "completed" && taskDate >= pastWeek;
     }).length;
-  
-    setWeeklyReport({ completed: completedThisWeek, pending: pendingTasks });
+
+    setWeeklyReport({ completed: completedThisWeek, pending: pendingTasks.length });
   }, [tasks]);
-  
 
   return (
     <div className="dashboard-container">
-      <Navbar />
       <div className="dashboard-content">
-        <Sidebar />
         <main className="main-content">
           <h1>Dashboard</h1>
           <TaskForm />
@@ -131,9 +119,25 @@ const upcoming = tasks.filter((task) => {
           <div className="task-summary">
             <p>Total Tasks: {totalTasks}</p>
             <p>Completed: {completedTasks}</p>
-            <p>Pending: {pendingTasks}</p>
+            <p>Pending: {pendingTasks.length}</p>
             <p>Points: {points} 🏆</p>
             <p>Streak: {streak} 🔥</p>
+          </div>
+
+          {/* 🔹 Display Pending Tasks */}
+          <div className="task-list">
+            <h2>Pending Tasks</h2>
+            {pendingTasks.length > 0 ? (
+              <ul>
+                {pendingTasks.map((task) => (
+                  <li key={task.id} className="task-item">
+                    <strong>{task.title}</strong> - {task.description}
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p>No pending tasks.</p>
+            )}
           </div>
 
           {/* Notifications & Reminders */}
@@ -141,7 +145,22 @@ const upcoming = tasks.filter((task) => {
             {upcomingTasks.length > 0 && (
               <div className="upcoming-tasks">
                 <h3>Upcoming Tasks 📅</h3>
-               
+                <ul>
+                  {upcomingTasks.map((task) => {
+                    const dueDate =
+                      task.dueDate instanceof Timestamp
+                        ? task.dueDate.toDate()
+                        : typeof task.dueDate === "number"
+                        ? new Date(task.dueDate)
+                        : null;
+
+                    return (
+                      <li key={task.id}>
+                        {task.title} - Due {dueDate ? dueDate.toDateString() : "No Due Date"}
+                      </li>
+                    );
+                  })}
+                </ul>
               </div>
             )}
           </div>
@@ -152,39 +171,6 @@ const upcoming = tasks.filter((task) => {
             <p>Completed Tasks: {weeklyReport.completed}</p>
             <p>Pending Tasks: {weeklyReport.pending}</p>
           </div>
-          <ul>
-  {upcomingTasks.map((task) => {
-    const dueDate =
-      task.dueDate instanceof Timestamp
-        ? task.dueDate.toDate()
-        : typeof task.dueDate === "number"
-        ? new Date(task.dueDate)
-        : null; // 🔹 Handle undefined dueDate
-
-    return (
-      <li key={task.id}>
-        {task.title} - Due {dueDate ? dueDate.toDateString() : "No Due Date"} {/* 🔹 Display fallback text */}
-      </li>
-    );
-  })}
-</ul>
-
-<ul>
-  {overdueTasks.map((task) => {
-    const dueDate =
-      task.dueDate instanceof Timestamp
-        ? task.dueDate.toDate()
-        : typeof task.dueDate === "number"
-        ? new Date(task.dueDate)
-        : null; // 🔹 Handle undefined dueDate
-
-    return (
-      <li key={task.id}>
-        {task.title} - Due {dueDate ? dueDate.toDateString() : "No Due Date"} {/* 🔹 Display fallback text */}
-      </li>
-    );
-  })}
-</ul>
 
           {/* Filters & Sorting */}
           <div className="filters">

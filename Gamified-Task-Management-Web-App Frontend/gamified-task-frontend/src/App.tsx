@@ -11,6 +11,7 @@ const App = () => {
     <Router>
       <AuthProvider>
         <TaskProvider>
+          {/* ✅ Navbar should be here to avoid multiple instances */}
           <Navbar />
           <Routes>
             <Route path="/login" element={<Login />} />
@@ -25,5 +26,3 @@ const App = () => {
 };
 
 export default App;
-
-

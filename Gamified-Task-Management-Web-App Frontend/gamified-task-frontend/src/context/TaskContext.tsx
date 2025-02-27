@@ -22,26 +22,29 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
   // 🔹 Fetch tasks from Firestore when the user logs in
   useEffect(() => {
     if (!user) return;
-
+  
+    console.log("Fetching tasks for user:", user.uid); // Debugging log
+  
     const fetchTasks = async () => {
       try {
-        const q = query(tasksCollection, where("userId", "==", user.uid)); // Fetch only tasks for this user
+        const q = query(tasksCollection, where("userId", "==", user.uid));
         const querySnapshot = await getDocs(q);
-
-        const fetchedTasks: Task[] = querySnapshot.docs.map((doc) => ({
+  
+        const fetchedTasks = querySnapshot.docs.map((doc) => ({
           id: doc.id,
           ...doc.data(),
         })) as Task[];
-
-        console.log("Fetched tasks:", fetchedTasks); // Debugging log
+  
+        console.log("Fetched tasks:", fetchedTasks);
         setTasks(fetchedTasks);
       } catch (error) {
         console.error("Error fetching tasks:", error);
       }
     };
-
+  
     fetchTasks();
   }, [user]);
+  
 
   // 🔹 Function to add a new task to Firestore
   const createTask = async (title: string, description: string, dueDate?: Date) => {
